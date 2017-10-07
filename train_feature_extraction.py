@@ -19,8 +19,8 @@ X_train, X_validation, y_train, y_validation = train_test_split(data['features']
 
 # Define placeholders and resize operation.
 #our image size is 32x32x3
-features = tf.Variabale(tf.float32, (None, 32, 32, 3))
-labels = tf.Variable(tf.int32, None)
+features = tf.placeholder(tf.float32, (None, 32, 32, 3))
+labels = tf.placeholder(tf.int32, None)
 #AlexNet expects images to be 277x277x3
 resized_features = tf.image.resize_images(features, (227, 227))
 
@@ -35,16 +35,16 @@ fc7 = AlexNet(resized_features, feature_extract=True)
 fc7 = tf.stop_gradient(fc7)
 
 # Add the final layer for traffic sign classification.
-fc7_features_count = fc7.get_shape().as_list[1]
-fc8W = tf.Variable(tf.truncated_normal((None, fc7_features_count, nb_classes)))
+fc7_features_count = fc7.get_shape().as_list()[1]
+fc8W = tf.Variable(tf.truncated_normal((fc7_features_count, nb_classes)))
 fc8b = tf.Variable(tf.zeros(nb_classes))
-logits = tf.xw_plus_b(fc7, fc8W, fc8b)
+logits = tf.nn.xw_plus_b(fc7, fc8W, fc8b)
 
 # Define loss, training, accuracy operations.
-cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits)
+cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=labels)
 loss_op = tf.reduce_mean(cross_entropy)
 optimizer = tf.train.AdamOptimizer()
-optimze_op = optimizer.minimize(loss, var_list=[fc8W, fc8W])
+optimze_op = optimizer.minimize(loss_op, var_list=[fc8W, fc8W])
 
 predictions_match = tf.equal(tf.arg_max(logits, 1), tf.arg_max(labels, 1))
 accuracy_op = tf.reduce_mean(tf.cast(predictions_match, tf.float32))
